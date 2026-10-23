@@ -52,8 +52,6 @@ def get_books(authorization: str | None = Header(default=None),
     # Level 6: Allow public filtering and pagination
     if author is None and page is None and limit is None:
         verify_token(authorization)
-    elif authorization is not None:
-        verify_token(authorization)
     
     # Retrieve all books
     result = list(books.values())
@@ -65,7 +63,7 @@ def get_books(authorization: str | None = Header(default=None),
         ]
 
     # Apply pagination if query parameters are provided
-    if page is not None and limit is not None:
+    if page is not None or limit is not None:
         page = page if page is not None else 1
         limit = limit if limit is not None else 10
 

@@ -1,6 +1,6 @@
 import secrets
 
-from fastapi import FastAPI, Body, HTTPException, status, Header
+from fastapi import FastAPI, Body, HTTPException, status, Header, Query
 from typing import Any
 from pydantic import BaseModel
 
@@ -44,9 +44,34 @@ def create_book(book: CreateBook):
 
 #Level 3b: Get all books
 @app.get("/books")
-def get_books(authorization: str | None = Header(default=None)):
+def get_books(authorization: str | None = Header(default=None),
+              author: str | None = None,
+              page: int | None = Query(default=None, ge=1),
+              limit: int | None = Query(default=None, ge=1)):
+
+    # Verify authentication
     verify_token(authorization)
-    return list(books.values())
+    
+    # Retrieve all books
+    result = list(books.values())
+
+    # Filter by author if query parameter is provided
+    if author is not None:
+        result = [
+            book for book in result if book["author"].casefold() == author.casefold()
+        ]
+
+    # Apply pagination if query parameters are provided
+    if page is not None and limit is not None:
+        page = page if page is not None else 1
+        limit = limit if limit is not None else 10
+
+        start = (page - 1) * limit
+        end = start + limit
+
+        result = result[start:end]
+    
+    return result
 
 # Level 3c: Get a book by ID
 @app.get("/books/{book_id}")

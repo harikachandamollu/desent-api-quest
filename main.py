@@ -69,7 +69,7 @@ def update_book(book_id: int, book: CreateBook):
     return updated_book
 
 # Level 4b: Delete a book by ID
-@app.delete("/books/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
+@app.delete("/books/{book_id}", status_code=status.HTTP_200_OK)
 def delete_book(book_id: int):
     
     if book_id not in books:
@@ -77,4 +77,7 @@ def delete_book(book_id: int):
     
     del books[book_id]
     
-    return None
+    return {
+        "success": True,
+        "message": "Book deleted successfully."
+    }

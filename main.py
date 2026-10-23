@@ -52,3 +52,29 @@ def get_book(book_id: int):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
     
     return books[book_id]
+
+# Level 4a: Update an existing book
+@app.put("/books/{book_id}")
+def update_book(book_id: int, book: CreateBook):
+    
+    if book_id not in books:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+
+    updated_book = {
+        "id": book_id,
+        **book.model_dump()
+    }
+    books[book_id] = updated_book
+    
+    return updated_book
+
+# Level 4b: Delete a book by ID
+@app.delete("/books/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_book(book_id: int):
+    
+    if book_id not in books:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+    
+    del books[book_id]
+    
+    return None

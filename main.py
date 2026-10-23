@@ -49,8 +49,11 @@ def get_books(authorization: str | None = Header(default=None),
               page: int | None = Query(default=None, ge=1),
               limit: int | None = Query(default=None, ge=1)):
 
-    # Verify authentication
-    verify_token(authorization)
+    # Level 6: Allow public filtering and pagination
+    if author is None and page is None and limit is None:
+        verify_token(authorization)
+    elif authorization is not None:
+        verify_token(authorization)
     
     # Retrieve all books
     result = list(books.values())

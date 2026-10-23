@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 app = FastAPI(title="Desent API Quest")
 
-
+# Level 7: Custom error handling for validation errors
 @app.exception_handler(RequestValidationError)
 async def handle_validation_error(
     request: Request,

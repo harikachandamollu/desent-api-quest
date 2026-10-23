@@ -5,7 +5,7 @@ app = FastAPI(title="Desent API Quest")
 
 @app.get("/ping")
 def ping():
-    return {"success": "True"}
+    return {"success": True}
 
 @app.post("/echo")
 def echo(payload: Any = Body(...)):

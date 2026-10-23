@@ -1,11 +1,52 @@
 import secrets
 
-from fastapi import FastAPI, Body, HTTPException, status, Header, Query
+from fastapi import FastAPI, Body, HTTPException, status, Header, Query, Request
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.exception_handlers import request_validation_exception_handler
 from typing import Any
 from pydantic import BaseModel
 
 
 app = FastAPI(title="Desent API Quest")
+
+
+@app.exception_handler(RequestValidationError)
+async def handle_validation_error(
+    request: Request,
+    exc: RequestValidationError
+):
+    errors = exc.errors()
+
+    # Invalid book ID in the URL: return 404
+    if (
+        request.method in {"GET", "PUT", "DELETE"}
+        and any(
+            error.get("loc", ())[:2] == ("path", "book_id") for error in errors
+        )
+    ):
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"detail": "Book not found"}
+        )
+
+    # Missing required book fields: return 400
+    if (
+        request.method == "POST"
+        and request.url.path == "/books"
+        and any(
+            error.get("type") == "missing"
+            and error.get("loc", ())[0:1] == ("body",) for error in errors
+        )
+    ):
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"detail": "Missing required book fields"}
+        )
+
+    # Preserving FastAPI's default validation error handling for other cases
+    return await request_validation_exception_handler(request, exc)
+
 
 # Level 1: Ping
 @app.get("/ping")

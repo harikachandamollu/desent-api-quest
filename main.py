@@ -1,6 +1,9 @@
-from fastapi import FastAPI, Body, HTTPException, status
+import secrets
+
+from fastapi import FastAPI, Body, HTTPException, status, Header
 from typing import Any
 from pydantic import BaseModel
+
 
 app = FastAPI(title="Desent API Quest")
 
@@ -41,7 +44,8 @@ def create_book(book: CreateBook):
 
 #Level 3b: Get all books
 @app.get("/books")
-def get_books():
+def get_books(authorization: str | None = Header(default=None)):
+    verify_token(authorization)
     return list(books.values())
 
 # Level 3c: Get a book by ID
@@ -81,3 +85,41 @@ def delete_book(book_id: int):
         "success": True,
         "message": "Book deleted successfully."
     }
+
+# Level 5: Authentication
+class LoginRequest(BaseModel):
+    
+    username: str
+    password: str
+
+# Token generated when the server starts
+ACCESS_TOKEN = secrets.token_urlsafe(32)
+
+@app.post("/auth/token")
+def create_token(credentials: LoginRequest):
+
+    valid_username = secrets.compare_digest(credentials.username, "admin")
+    valid_password = secrets.compare_digest(credentials.password, "password")
+
+    if not (valid_username and valid_password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+
+    return {
+        "token": ACCESS_TOKEN,
+        "access_token": ACCESS_TOKEN,
+        "token_type": "bearer"
+    }
+
+def verify_token(authorization: str | None):
+
+    if not authorization:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization required")
+
+    scheme, separator, token = authorization.partition(" ")
+
+    if (
+        not separator
+        or scheme.lower() != "bearer"
+        or not secrets.compare_digest(token, ACCESS_TOKEN)
+    ):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
